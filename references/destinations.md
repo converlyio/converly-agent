@@ -67,7 +67,7 @@ converly actions tiktok-ads
 converly flows create --json '{
   "site_id": "site_XXXX",
   "name": "Leads to TikTok",
-  "trigger_config": { "integrationId": "generic-form", "pageFilter": "all" },
+  "trigger_config": { "integrationId": "generic-form" },
   "actions_config": [{ "id": "act-1", "integrationId": "tiktok-ads",
     "config": <the config_example from converly actions, with your values> }]
 }'

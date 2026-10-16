@@ -1,7 +1,7 @@
 ---
 name: converly
 description: Set up server side conversion tracking for ad platforms (Google Ads, Meta, ChatGPT, LinkedIn, TikTok and more) without writing tracking code. Use this whenever the user wants to track form submissions, meetings booked or chats started as conversions, capture GCLID or FBCLID click IDs, fix broken conversion tracking, set up Google Enhanced Conversions or Meta CAPI, check which ads are converting, or connect a form tool like Typeform, Webflow forms, or a custom HTML form to an ad platform, even if they never mention Converly by name.
-version: 1.1.0
+version: 1.2.0
 homepage: https://developers.converly.io
 metadata:
   openclaw:
@@ -120,7 +120,7 @@ When the completed result lists anything in `user_steps_remaining`, the connecti
 
 The same honesty applies to `capture_without_connection` in the setup block. It tells you what actually happens if the user declines to connect (for example Typeform still reports bare submission counts but no visitor details, so ad platforms match poorly). Use it to explain tradeoffs truthfully, not to skip the connect step.
 
-Once a connection-required platform is connected, you can narrow the flow to one specific form or event type instead of firing on all of them. List the account's real ones with `converly triggers options <slug> --site site_XXXX`, offer the user a specific value, and write it back as `trigger_config.conditions` (the full shape is in references/triggers.md → Filters). This is optional, an unfiltered flow is valid and publishable. Browser-detected form tools do not support this, narrow those by page with `--pages` instead.
+Once a connection-required platform is connected, you can narrow the flow to one specific form or event type instead of firing on all of them. List the account's real ones with `converly triggers options <slug> --site site_XXXX`, offer the user a specific value, and write it back as `trigger_config.filters` (the full shape is in references/triggers.md → Filters). This is optional, an unfiltered flow is valid and publishable. Browser form tools can be narrowed by page with `--pages`, and Gravity Forms also by form ID with `--form-ids`.
 
 Before choosing a trigger type at all, apply fact 3 from the interview. If there is a verification step, a payment, or onboarding between the form and the real outcome, a form trigger counts people who never converted; use the `api` trigger instead.
 
@@ -188,7 +188,7 @@ converly flows create --site site_XXXX --name "Demo requests" \
 
 The simple form above sets the custom-event flag for you. If you build the action with `--json` instead, include `conversion.is_custom` yourself or the flow will fail validation.
 
-Add `--value 50 --currency USD` if the user wants a conversion value. Restrict to specific pages with `--pages /contact,/demo`. For a connected platform (Typeform, Jotform, Calendly, Acuity) you can narrow to one real form or event type. List them with `converly triggers options <slug> --site <id>`, then set `trigger_config.conditions` via `--json`. For anything richer (multiple actions), pass the whole flow body with `--json`; run `converly actions <destination>` to see each destination's config schema.
+Add `--value 50 --currency USD` if the user wants a conversion value. Narrow browser form tools to specific pages with `--pages /contact,/demo`, and Gravity Forms also to form IDs with `--form-ids 12,34`. For a connected platform (Typeform, Jotform, Calendly, Acuity) you can narrow to one real form or event type. List them with `converly triggers options <slug> --site <id>`, then set `trigger_config.filters` with the public object via `--filters-json`. For anything richer (multiple actions), pass the whole flow body with `--json`; run `converly actions <destination>` to see each destination's config schema.
 
 Then validate and publish:
 

@@ -23,7 +23,7 @@ If you have repo or page access, inspect the form markup and decide yourself. Em
 
 ## Trigger types
 
-- `form_submission` - about 80 providers: Gravity Forms, Contact Form 7, WPForms, Elementor, Typeform, Jotform, Webflow, Wix, Squarespace, Framer, Unbounce, HubSpot, Mailchimp, Marketo, Tally, Fillout, ClickFunnels, and more. No filter is required. A flow with no `--pages` fires for every form of that type anywhere on the site, so offer page narrowing when the site has more than one form.
+- `form_submission`. About 80 providers, including Gravity Forms, Contact Form 7, WPForms, Elementor, Typeform, Jotform, Webflow, Wix, Squarespace, Framer, Unbounce, HubSpot, Mailchimp, Marketo, Tally, Fillout, ClickFunnels, and more. No filter is required. A flow with no filters fires for every submission of that type on the site, so offer narrowing when the site has more than one form.
 - `chat_started` - LiveChat, Intercom, Drift, Tawk.to, HubSpot Chat and similar. Fires when a visitor starts a conversation.
 - `meeting_booked` - Calendly, Acuity, Cal.com, OnceHub, SavvyCal style booking tools.
 - Connection-required providers. Read each provider's `setup` block in the catalogue. `requires_connection: true` (Typeform, Jotform, Calendly, Acuity today) means the tool must be connected with `converly triggers connect <slug> --site <id>` BEFORE its flow properly works. `capture_without_connection` tells you honestly what happens if the user declines (for example count-only capture with no visitor details). `post_connect_user_steps` lists steps the USER must still do outside Converly (Acuity's pasted snippet); Converly cannot verify those, so setup is only proven when the first event arrives.
@@ -31,14 +31,53 @@ If you have repo or page access, inspect the form markup and decide yourself. Em
 
 ## Filters
 
-The simple CLI form defaults to all pages (`pageFilter: "all"`), and that is a valid, publishable flow. Narrowing options, honestly stated:
+Write filters to `trigger_config.filters`. With no filters, every submission of the selected type counts, and the flow is valid and publishable.
 
-- **By page** (works for every browser-detected tool): `--pages /contact,/demo`. This is the only per-form narrowing that works for browser-detected tools. When the site has more than one form, ask which page the form the user cares about lives on and narrow to it, otherwise a contact form and a newsletter box report as the same conversion.
-- **By specific form or event type** (connection-required providers only: Typeform, Jotform, Calendly, Acuity). Once the platform is connected, list its real forms or event types with `converly triggers options <slug> --site <site_id>`. Each field in the result carries the account's actual values with their `id` and `name`. Offer the user a specific one, then narrow the flow by writing `trigger_config.conditions` keyed by that field, for example `converly flows update <flow_id> --json '{"trigger_config": {"conditions": {"form": {"ids": ["abc123"], "names": ["Demo Request"]}}}}'`. The values come live from the platform, so never invent condition values that `triggers options` did not return. Respect its `notes` too: a field marked `available: false` means the values could not be fetched, not that the account has none.
+The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each rule has `field`, `op` (`"only"` or `"except"`, where supported), and `values`. Page values are path strings, with `*` for a section. Other fields take objects such as `{ "id": "12" }` or `{ "name": "Demo Request" }`, where supported. Do not mix IDs and names in one rule. Use the trigger catalogue's `filters` to check which fields, operations and inputs the tool supports.
 
-There is no `formId`, `formSelector`, or CSS-selector filter on any surface. The only two filters the loader actually honours are the page path (above) and, for connected platforms, the `conditions` shape from `triggers options`. Any other field you put on the trigger is silently dropped at publish and the flow fires on every form of that type, so do not guess a filter field.
+**By page.** Every browser form tool supports page filters. For example, set `trigger_config.filters` to:
 
-To adjust an existing flow, pass just the changed field to `converly flows update <flow_id> --json '{"trigger_config": {...}}'`.
+```json
+{
+  "match": "all",
+  "list": [{ "field": "page", "op": "only", "values": ["/pricing", "/services/*"] }]
+}
+```
+
+**By Gravity Forms form ID.** Gravity Forms also supports including or excluding specific form IDs. Other browser form tools have no form filter. For Gravity Forms form 12, set `trigger_config.filters` to:
+
+```json
+{
+  "match": "all",
+  "list": [{ "field": "form", "op": "only", "values": [{ "id": "12" }] }]
+}
+```
+
+**By a connected tool's form or event type.** After connecting the tool, get the account's real choices with `list_trigger_filter_options` or `converly triggers options <slug> --site <site_id>`. Offer those choices to the user, then put the selected ID in the matching field. For example, if Typeform returns a form with ID `abc123`, set `trigger_config.filters` to:
+
+```json
+{
+  "match": "all",
+  "list": [{ "field": "form", "op": "only", "values": [{ "id": "abc123" }] }]
+}
+```
+
+Never invent IDs or names. Respect the result's `notes`. A field marked `available: false` means the choices could not be fetched, not that the account has none.
+
+For `converly flows create`, the CLI provides these flags:
+
+- `--pages /contact,/demo` includes those pages; `--except-pages /newsletter` excludes a page.
+- `--form-ids 12,34` includes Gravity Forms IDs; `--except-form-ids 56` excludes an ID.
+- `--match any` lets any rule match. Without it, all rules must match.
+- `--filters-json` takes the public filters object above, including connected-tool filters. Do not combine it with the shortcut flags.
+
+To change only an existing flow's filters, pass the public object directly to `flows update --filters-json`:
+
+```sh
+converly flows update <flow_id> --filters-json '{"match":"all","list":[{"field":"form","op":"only","values":[{"id":"abc123"}]}]}'
+```
+
+The legacy `pageFilter`, `pages` and `conditions` fields are deprecated and still accepted. Use `filters` for new writes.
 
 ## When nothing fires
 

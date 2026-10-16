@@ -46,7 +46,7 @@ curl -sS --fail-with-body -X POST "$BASE/flows" -H "$AUTH" -H "Content-Type: app
   -H "Idempotency-Key: $IDEM" -d '{
   "site_id": "{site_id}",
   "name": "Demo requests",
-  "trigger_config": { "integrationId": "generic-form", "pageFilter": "all" },
+  "trigger_config": { "integrationId": "generic-form" },
   "actions_config": [{
     "id": "act-1",
     "integrationId": "google-ads",
