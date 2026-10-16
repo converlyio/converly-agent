@@ -33,8 +33,6 @@ If you have repo or page access, inspect the form markup and decide yourself. Em
 
 Write filters to `trigger_config.filters`. With no filters, every submission of the selected type counts, and the flow is valid and publishable.
 
-The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each rule has `field`, `op` (`"only"` or `"except"`, where supported), and `values`. Page values are path strings, with `*` for a section. Other fields take objects such as `{ "id": "12" }` or `{ "name": "Demo Request" }`, where supported. Do not mix IDs and names in one rule. Use the trigger catalogue's `filters` to check which fields, operations and inputs the tool supports.
-
 **By page.** Every browser form tool supports page filters. For example, set `trigger_config.filters` to:
 
 ```json
@@ -43,6 +41,8 @@ The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each r
   "list": [{ "field": "page", "op": "only", "values": ["/pricing", "/services/*"] }]
 }
 ```
+
+The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each rule has `field`, `op` (`"only"` or `"except"`, where supported), and `values`. Page values are path strings, with `*` for a section. Other fields take objects such as `{ "id": "12" }` or `{ "name": "Demo Request" }`, where supported. Do not mix IDs and names in one rule. Use the trigger catalogue's `filters` to check which fields, operations and inputs the tool supports. The catalogue lists what the tool supports, not what this account can use yet. If the API refuses a filter as not yet available, fall back to a page filter or no filter and tell the user.
 
 **By Gravity Forms form ID.** Gravity Forms also supports including or excluding specific form IDs. Other browser form tools have no form filter. For Gravity Forms form 12, set `trigger_config.filters` to:
 
