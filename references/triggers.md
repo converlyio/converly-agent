@@ -38,11 +38,22 @@ Write filters to `trigger_config.filters`. With no filters, every submission of 
 ```json
 {
   "match": "all",
-  "list": [{ "field": "page", "op": "only", "values": ["/pricing", "/services/*"] }]
+  "list": [{ "field": "page", "op": "only", "values": ["/pricing", "/contact"] }]
 }
 ```
 
-The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each rule has `field`, `op` (`"only"` or `"except"`, where supported), and `values`. Page values are path strings, with `*` for a section. Other fields take objects such as `{ "id": "12" }` or `{ "name": "Demo Request" }`, where supported. Do not mix IDs and names in one rule. Use the trigger catalogue's `filters` to check which fields, operations and inputs the tool supports. The catalogue lists what the tool supports, not what this account can use yet. If the API refuses a filter as not yet available, fall back to a page filter or no filter and tell the user.
+The public format has `match` (`"all"` or `"any"`) and a `list` of rules. Each rule has `field`, `op` (`"only"` or `"except"`, where supported), and `values`. Page values are path strings, with `*` for a section once enabled. Other fields take objects such as `{ "id": "12" }` or `{ "name": "Demo Request" }`, where supported. Do not mix IDs and names in one rule. Use the trigger catalogue's `filters` to check which fields, operations and inputs the tool supports. The catalogue lists what the tool supports, not what this account can use yet. If the API refuses a filter as not yet available, fall back to an exact page path filter for a browser form tool or no filter and tell the user.
+
+Wildcard page paths (values ending in `*`), Gravity Forms form IDs, `except`, matching any of several rules, and page rules on connected tools are refused until enabled. A single rule with `match: "any"` is accepted if the rule itself is available.
+
+**By page section, once enabled.** To count submissions on pages under `/services/`, set `trigger_config.filters` to:
+
+```json
+{
+  "match": "all",
+  "list": [{ "field": "page", "op": "only", "values": ["/services/*"] }]
+}
+```
 
 **By Gravity Forms form ID.** Gravity Forms also supports including or excluding specific form IDs. Other browser form tools have no form filter. For Gravity Forms form 12, set `trigger_config.filters` to:
 
