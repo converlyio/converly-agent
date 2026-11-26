@@ -16,7 +16,7 @@ metadata:
 
 Converly tracks form submissions on a website and fires conversion events to ad platforms (Google Ads, Meta, GA4 and more), including server side delivery like Google Enhanced Conversions and Meta CAPI. You do the whole setup from the terminal with the `converly` CLI, verify it works with a real test event, and read conversion results afterwards.
 
-Every data command prints one JSON document to stdout when you run it (`help` and `version` print plain text). Exit code 0 means success. Errors are JSON on stderr with the API's error code. (In a person's terminal a few commands print sentences instead. If you ever see sentences rather than JSON, add `--output json`.)
+Every data command prints one JSON document to stdout when you run it (`help` and `version` print plain text). Exit code 0 means success. Errors are JSON on stderr with the API's error code. (In a person's terminal a few commands print sentences instead. If a data command ever prints sentences rather than JSON, add `--output json`.)
 
 ## Hard rules (read first)
 

@@ -48,4 +48,4 @@ Work through, in order:
 2. Site domain set and matching the real origin? `converly sites list` → `domain`. A staging URL or a different subdomain will be rejected.
 3. Flow published? `converly flows get <id>` → `status` must be `published`, `publication_state` should be `in_sync`.
 4. Right provider slug for what actually renders the form? (See "Picking the right slug".)
-5. Still nothing: `converly events list --status failed` and `converly events get` on anything that appears. The event detail carries each destination's result, an `error_code` when one failed (older events may carry only `error_message`), a plain `reason` with the fix command for the common ones (for example `destination_not_connected`), and user facing notices.
+5. Still nothing: `converly events list --status failed` and `converly events get` on anything that appears. The event detail carries each destination's result, an `error_code` when one failed (older events may carry only `error_message`), and, for the common codes, a plain `reason` with the fix command (for example `destination_not_connected`), and user facing notices.
