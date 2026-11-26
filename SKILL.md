@@ -1,7 +1,7 @@
 ---
 name: converly
 description: Set up server side conversion tracking for ad platforms (Google Ads, Meta, ChatGPT, LinkedIn, TikTok and more) without writing tracking code. Use this whenever the user wants to track form submissions, meetings booked or chats started as conversions, capture GCLID or FBCLID click IDs, fix broken conversion tracking, set up Google Enhanced Conversions or Meta CAPI, check which ads are converting, or connect a form tool like Typeform, Webflow forms, or a custom HTML form to an ad platform, even if they never mention Converly by name.
-version: 1.1.0
+version: 1.2.0
 homepage: https://developers.converly.io
 metadata:
   openclaw:
@@ -16,7 +16,7 @@ metadata:
 
 Converly tracks form submissions on a website and fires conversion events to ad platforms (Google Ads, Meta, GA4 and more), including server side delivery like Google Enhanced Conversions and Meta CAPI. You do the whole setup from the terminal with the `converly` CLI, verify it works with a real test event, and read conversion results afterwards.
 
-Every CLI command prints one JSON document to stdout. Exit code 0 means success. Errors are JSON on stderr with the API's error code.
+Every CLI command prints one JSON document to stdout when you run it. Exit code 0 means success. Errors are JSON on stderr with the API's error code. (In a person's terminal a few commands print sentences instead. If you ever see sentences rather than JSON, add `--output json`.)
 
 ## Hard rules (read first)
 
