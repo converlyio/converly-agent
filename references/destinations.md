@@ -13,7 +13,7 @@ Two families of destination:
 - The flow action fires a specific **conversion action** that must already exist in the Google Ads account. Pick it from `converly destinations conversions google-ads` and put its `id` in the config (`--conversion-id`).
 - If the list is empty, the user creates one in Google Ads (Goals → Conversions → New conversion action → Website, then "conversion created manually with code"), then re-list with `--refresh`.
 - `enhancedConversions` defaults to true. It sends hashed first party data (email) alongside the conversion, which improves match rates. Leave it on unless the user objects.
-- Google requires the account to have accepted the Customer Data Terms for Enhanced Conversions to work. If test events succeed but Google reports no enhanced data, that acceptance (in Google Ads settings) is the usual culprit.
+- Google requires the account to have accepted the Customer Data Terms for Enhanced Conversions to work. If conversions are accepted but Google reports no enhanced data, that acceptance (in Google Ads settings) is the usual culprit.
 - Conversions attribute via the GCLID captured when the visitor clicked the ad. Organic visits carry no GCLID, so a form fill without an ad click still records in Converly but cannot attribute in Google Ads. Expected behaviour, not a bug.
 
 Config shape:
@@ -30,7 +30,7 @@ Config shape:
 - Connect via handoff. The popup offers both OAuth and a paste token path; the user picks inside the popup.
 - The action fires a **pixel event by name**. Standard events: `Lead`, `CompleteRegistration`, `Purchase`, `Contact`, `SubmitApplication`, `Schedule`, `StartTrial`, `Subscribe`. Use `--event-name Lead` with `is_custom: false` (the CLI default). For a custom named event pass `--event-name MyEvent --custom`.
 - Delivery is dual: browser pixel plus server side CAPI with event deduplication. That is why connecting matters even though Meta has a browser pixel.
-- Testing: get a test code from Meta Events Manager → Test events, pass it as `--meta-code TEST12345`. The test conversion then appears in that tab instantly instead of mixing with real data.
+- Testing: a test submission on the website shows in Meta Events Manager.
 
 Config shape:
 
@@ -81,7 +81,7 @@ For `microsoft-ads`, `x-ads`, `pinterest-ads`, `snapchat-ads`, `adroll`, `tabool
 
 - No connect step (`converly destinations connect` will refuse and tell you so). Run `converly actions <type>`, build the flow with its `config_example` via `--json` exactly as in the TikTok example above, publish, done.
 - The platform's own base pixel must already be installed on the site. Converly tells the pixel to fire the conversion; it does not install the pixel. If you have page access, verify the pixel script is present before promising anything.
-- Delivery is browser side only, so ad blockers can suppress these. Note `converly test-event` exercises server side delivery and does NOT apply to browser side destinations; verification here is a real form submission appearing in `converly events list`.
+- Delivery is browser side only, so ad blockers can suppress these. Verification is a real form submission appearing in `converly events list`.
 
 ## ChatGPT Ads (`chatgpt-ads`)
 

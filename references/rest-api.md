@@ -56,17 +56,7 @@ curl -sS --fail-with-body -X POST "$BASE/flows" -H "$AUTH" -H "Content-Type: app
 $CURL -X POST "$BASE/flows/{flow_id}/validate" -H "$AUTH"
 $CURL -X POST "$BASE/flows/{flow_id}/publish" -H "$AUTH" -H "Idempotency-Key: $(uuidgen)"
 
-# 6. Verify destination delivery
-# The action config here must MATCH the published flow's action exactly
-# (same conversion, same enhancedConversions), or you are testing something
-# other than what will run.
-$CURL -X POST "$BASE/test-event" -H "$AUTH" -H "Content-Type: application/json" -d '{
-  "flow_id": "{flow_id}",
-  "action": { "action_id": "act-1", "integration_id": "google-ads",
-              "config": { "conversion": { "id": "123456789" }, "enhancedConversions": true } }
-}'
-
-# 7. Read conversions
+# 6. After one real form submission, read conversions
 $CURL "$BASE/events?limit=20" -H "$AUTH"
 $CURL "$BASE/events/{event_id}" -H "$AUTH"
 ```

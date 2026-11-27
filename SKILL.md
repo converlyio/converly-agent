@@ -1,7 +1,7 @@
 ---
 name: converly
 description: Set up server side conversion tracking for ad platforms (Google Ads, Meta, ChatGPT, LinkedIn, TikTok and more) without writing tracking code. Use this whenever the user wants to track form submissions, meetings booked or chats started as conversions, capture GCLID or FBCLID click IDs, fix broken conversion tracking, set up Google Enhanced Conversions or Meta CAPI, check which ads are converting, or connect a form tool like Typeform, Webflow forms, or a custom HTML form to an ad platform, even if they never mention Converly by name.
-version: 1.2.0
+version: 1.3.0
 homepage: https://developers.converly.io
 metadata:
   openclaw:
@@ -14,7 +14,7 @@ metadata:
 
 # Converly: conversion tracking for AI agents
 
-Converly tracks form submissions on a website and fires conversion events to ad platforms (Google Ads, Meta, GA4 and more), including server side delivery like Google Enhanced Conversions and Meta CAPI. You do the whole setup from the terminal with the `converly` CLI, verify it works with a real test event, and read conversion results afterwards.
+Converly tracks form submissions on a website and fires conversion events to ad platforms (Google Ads, Meta, GA4 and more), including server side delivery like Google Enhanced Conversions and Meta CAPI. You do the whole setup from the terminal with the `converly` CLI, verify it works with one real test submission, and read conversion results afterwards.
 
 Every data command prints one JSON document to stdout when you run it (`help` and `version` print plain text). Exit code 0 means success. Errors are JSON on stderr with the API's error code. (In a person's terminal a few commands print sentences instead. If a data command ever prints sentences rather than JSON, add `--output json`.)
 
@@ -22,10 +22,10 @@ Every data command prints one JSON document to stdout when you run it (`help` an
 
 1. **Never handle credentials in chat.** Do not ask the user to paste an API key, and never print `CONVERLY_API_KEY` or any token. Authentication is `converly login`, which happens in the user's browser.
 2. **Connecting an ad platform requires a human.** `converly destinations connect` returns a URL the user must open in their browser. Never claim a destination is connected until `converly handoffs wait <id>` returns `"status": "completed"`. Never skip this step, and never work around it by asking for tokens.
-3. **Be precise about what is verified.** `converly test-event` returning `"server_status": "success"` proves the DELIVERY half: Converly can reach the ad platform and the platform accepted the conversion. `install status` showing `"detection": "confirmed"` proves the loader is on the page and running (it phones home on page load). Neither proves the form itself gets detected. Full proof of capture is a real form submission appearing in `converly events list` with a successful action status. Report exactly which level you verified. Publishing a flow proves nothing by itself.
-4. **Never pass `--allow-real` without the user's explicit agreement in this conversation.** It reports a real conversion to their ad platform. Ask, wait for yes, then run it.
+3. **Be precise about what is verified.** `install status` showing `"detection": "confirmed"` proves the loader is on the page and running. It does not prove the form itself gets detected. The proof that tracking works is one real form submission appearing in `converly events list` with a successful action status. Report exactly which level you verified. Publishing a flow proves nothing by itself.
+4. **Don't answer from general knowledge about how Converly or an ad platform behaves.** Use the command output or `converly docs search`, and if neither answers it, say so. When a reply carries `assistant_guidance`, follow its `text` and pass on anything it says to tell the user as written.
 5. **Set the site's domain before publishing.** A site with `"domain": null` rejects every event server side. The flow will publish fine and capture nothing. Check `converly sites list` and fix with `converly sites update <site_id> --domain <their-domain>` before you publish.
-6. **Destructive actions need explicit user confirmation first.** Deleting a flow (`flows delete` requires `--yes`), unpublishing a flow that is live, disconnecting a destination, or any DELETE via `converly api`. Never do these on your own initiative, even for things you created this session.
+6. **Destructive or outward actions need explicit user confirmation first.** Deleting a flow (`flows delete` requires `--yes`), unpublishing a flow that is live, disconnecting a destination, any DELETE via `converly api`, and contacting Converly support (`converly support` requires `--yes`). Never do these on your own initiative, even for things you created this session.
 7. **If a command fails twice with the same error, stop and show the user the error.** Do not loop retries. If you must retry a create command after an ambiguous failure, re-run it with the same `--idempotency-key` value so it cannot double-create.
 8. **Never choose the conversion for the user.** Always run `converly destinations conversions <destination>` first, whatever the platform. If it returns options, show them and ask which one this form represents. If it comes back empty or errors, ask the user what the conversion should be called rather than inventing one. A wrong conversion still reports success while quietly corrupting the numbers they are trying to collect. Google Ads can only fire conversion actions that already exist in their Google Ads account, so if none fit they create one there and you re-list with `--refresh`. Meta and GA4 take a standard event from the list, or a name of the user's own with `--custom`.
 
@@ -190,14 +190,19 @@ The simple form above sets the custom-event flag for you. If you build the actio
 
 Add `--value 50 --currency USD` if the user wants a conversion value. Restrict to specific pages with `--pages /contact,/demo`. For a connected platform (Typeform, Jotform, Calendly, Acuity) you can narrow to one real form or event type. List them with `converly triggers options <slug> --site <id>`, then set `trigger_config.conditions` via `--json`. For anything richer (multiple actions), pass the whole flow body with `--json`; run `converly actions <destination>` to see each destination's config schema.
 
-Then validate and publish:
+Then validate:
 
 ```
 converly flows validate flow_XXXX
-converly flows publish flow_XXXX
 ```
 
 `validate` returns `problems[]` (blockers, fix before publishing) and `warnings[]` (site readiness, for example `site_missing_domain`). Take warnings seriously, they are the "publishes fine, captures nothing" cases.
+
+**Read the flow back to the user and get a yes before publishing.** `validate` returns a `flow_summary` ("fires when ... sends ...") and `assistant_guidance` with the read-back. Tell the user what will fire and where, and publish only once they agree:
+
+```
+converly flows publish flow_XXXX
+```
 
 ### 6. Install the tracking snippet
 
@@ -210,26 +215,37 @@ Returns the `<script>` tag.
 - **If you have access to the website's codebase** (you are running in their repo, or can edit their site), add the snippet to the `<head>` of every page yourself and deploy it. Say what you changed.
 - **If you do not**, give the user the snippet with one clear instruction: paste it into the `<head>` of every page, or into their site builder's custom code slot (Settings → Custom Code in Webflow / Wix / Squarespace, a header scripts plugin in WordPress). Site builders need the site republished before the change is live.
 
-Check with `converly install status site_XXXX`. The loader phones home when a page loads, so the check is quick. Have any page of the site opened once in a real browser, then re-run the command. If you have browser tools, open the page yourself. Read `detection`:
+Check with `converly install status site_XXXX`. The loader only reports in once a flow is published (it gets Converly's address from the published settings), so publish first. After that it phones home when a page loads, so the check is quick. Have any page of the site opened once in a real browser, then re-run the command. If you have browser tools, open the page yourself. Read `detection`:
 
 - `"confirmed"` means the loader has been seen running on the site (or a conversion was already captured). If the response carries `origin_authorized: false`, the loader runs but the site's domain does not match, so conversions get rejected. Fix the domain with `converly sites update` and have the page reloaded.
-- `"never_seen"` means the loader has never phoned home. If a page has been loaded since installing and it still says this, the snippet is probably not live yet (site builders need a republish). Two blind spots never send heartbeats: sites installed through the Converly Webflow app, and visitors with privacy signals or unconsented cookie banners. For those, prove the install with a real submission appearing in `converly events list` (hard rule 3).
+- `"never_seen"` means the loader has never phoned home. Before a flow is published it always says this, even when the snippet is installed, so until a flow is live it doesn't mean the snippet is missing (`published_flow: false` and the reply's `assistant_guidance` say so). With a flow published and a page loaded since installing, it means the snippet is probably not live yet (site builders need a republish). Two blind spots never send heartbeats: sites installed through the Converly Webflow app, and visitors with privacy signals or unconsented cookie banners. For those, prove the install with a real submission appearing in `converly events list` (hard rule 3).
 
-### 7. Verify
+### 7. Verify with one real submission
 
-Verification has two halves. Do both when you can, and say exactly which you did.
-
-**Delivery (always do this):**
+Ask the user to submit the real form on their website once (a test lead with their own details is fine), then look for it:
 
 ```
-converly test-event --flow flow_XXXX
+converly events list --limit 10
 ```
 
-This fires a test conversion through Converly's server to the ad platform and returns the platform's response. `"server_status": "success"` proves the connection, the flow config, and the conversion mapping all work. For Meta pass `--meta-code` (from Meta Events Manager → Test events), for Reddit `--reddit-id`, for TikTok `--tiktok-code`, and the test then stays out of real data. Google Ads, GA4, LinkedIn and ChatGPT Ads have no sandbox mode, so the command will refuse with `would_create_real_conversion`. For those, either get the user's explicit OK to send one real test conversion and re-run with `--allow-real` (hard rule 4), or skip the test event and verify with a live form submission instead.
+- **It's there with a successful action status.** Tracking works end to end. Pass on the reply's `assistant_guidance.text` (the closing note: where to see the conversion in each ad platform, that test leads need no clean-up, and the double-counting check) as written. A test the user submits themselves never shows in Google Ads; don't tell them to look for it there.
+- **Nothing yet.** The reply's `assistant_guidance` says how long to wait. After that, run `converly install status site_XXXX` and look before asking the user anything.
+- **It's there but an action failed.** Run `converly events get evt_XXXX`. Each failed action says what happened and what the person does; tell them exactly that.
 
-**Capture (proves the website half):** `converly install status site_XXXX` showing `"detection": "confirmed"` proves the loader is running on the site (load a page once to trigger it). The form itself is proven by a real submission: ask the user to submit the form once, then find it in `converly events list` with a successful action status.
+## When you don't know, or something is wrong
 
-Report accordingly. After delivery only: "Delivery to [platform] is verified with a test conversion. The final check is one real form submission, which will appear in the conversion log." After both: "Tracking is verified end to end."
+- For a question about how Converly or an ad platform behaves, search the help first and read the article that fits before answering:
+
+  ```
+  converly docs search "<question>"
+  converly docs read <article url>
+  ```
+
+- If a connect keeps failing, a form tool isn't in `converly triggers`, or a problem has no explanation in the replies or the help, offer to contact Converly support. Only send once the user says yes. Converly attaches the account, site and history itself. Never promise when support will reply.
+
+  ```
+  converly support --kind connection_problem|form_tool_request|delivery_problem|question --message "<what happened and what was tried>" --yes
+  ```
 
 ## After setup: reading results
 
@@ -280,9 +296,11 @@ converly flows validate <flow_id>
 converly flows publish <flow_id>
 converly install snippet <site_id>
 converly install status <site_id>
-converly test-event --flow <flow_id>           # verify destination delivery
-converly events list --limit 20                # the conversion log
+converly events list --limit 20                # the conversion log, after one real submission
 converly events get <evt_id>                   # per destination delivery detail
+converly docs search "<question>"              # Converly help, before answering from memory
+converly docs read <article url>
+converly support --kind <kind> --message "..." --yes   # only after the user says yes
 ```
 
 ## Deeper docs

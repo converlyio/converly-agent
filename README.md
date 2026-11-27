@@ -1,6 +1,6 @@
 # Converly agent skill
 
-Teach your AI agent to set up conversion tracking. This skill walks Claude Code, OpenClaw, Codex and other agents through the full Converly setup: install the tracking snippet, connect an ad platform, build and publish a conversion flow, verify it with a real test event, and read conversion results afterwards.
+Teach your AI agent to set up conversion tracking. This skill walks Claude Code, OpenClaw, Codex and other agents through the full Converly setup: connect an ad platform, build and publish a conversion flow, install the tracking snippet, verify it with one real test submission, and read conversion results afterwards.
 
 [Converly](https://converly.io) tracks form submissions on your website and fires conversions to Google Ads, Meta, GA4, LinkedIn, TikTok and more, including server side delivery (Google Enhanced Conversions, Meta CAPI).
 
